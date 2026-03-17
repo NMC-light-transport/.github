@@ -1,0 +1,83 @@
+cff-version: 1.2.0
+message: "If you use NMC in your research, please cite as below."
+type: software
+title: "NMC — Nonlinear Monte Carlo"
+abstract: >
+  Open-source framework for Monte Carlo modelling of nonlinear light–matter
+  interactions in biological tissues. Supports spontaneous and stimulated
+  Raman scattering (SRS) in turbid media, with optimised implementations
+  for GPU (CUDA) and Apple M-series (ARM) processors.
+authors:
+  - family-names: Doronin
+    given-names: Alexander
+    affiliation: Victoria University of Wellington, New Zealand
+    orcid: "https://orcid.org/0000-0002-2884-8085"
+  - family-names: Vladyko
+    given-names: Ilya
+    affiliation: Victoria University of Wellington, New Zealand
+  - family-names: Yakovlev
+    given-names: Vladislav V.
+    affiliation: Texas A&M University, USA
+repository-code: "https://github.com/aledoronin"
+url: "https://github.com/aledoronin"
+license: MIT
+keywords:
+  - Monte Carlo
+  - photon transport
+  - Raman scattering
+  - stimulated Raman scattering
+  - biological tissue
+  - biophotonics
+  - GPU
+  - Apple M-series
+  - turbid media
+
+references:
+  - type: article
+    title: "Monte Carlo modelling of Raman signal enhancement using Apple M-series processors"
+    authors:
+      - family-names: Vladyko
+        given-names: Ilya
+      - family-names: Yakovlev
+        given-names: Vladislav V.
+      - family-names: Doronin
+        given-names: Alexander
+    year: 2025
+    conference:
+      name: "SPIE BiOS 2025"
+  - type: article
+    title: "Neu(t)ralMC: open-source energy-efficient Monte Carlo algorithm for photon transport"
+    authors:
+      - family-names: Clennell
+        given-names: Benjamin
+      - family-names: Nguyen
+        given-names: Thanh
+      - family-names: Yakovlev
+        given-names: Vladislav V.
+      - family-names: Doronin
+        given-names: Alexander
+    year: 2023
+    journal: "Optics Express"
+    volume: "31"
+    issue: "19"
+  - type: article
+    title: "Peer-to-peer Monte Carlo simulation of photon migration"
+    authors:
+      - family-names: Doronin
+        given-names: Alexander
+      - family-names: Meglinski
+        given-names: Igor
+    year: 2012
+    journal: "Journal of Biomedical Optics"
+    volume: "17"
+    issue: "9"
+  - type: article
+    title: "Online object-oriented Monte Carlo computational tool for biomedical optics"
+    authors:
+      - family-names: Doronin
+        given-names: Alexander
+      - family-names: Meglinski
+        given-names: Igor
+    year: 2011
+    journal: "Biomedical Optics Express"
+    volume: "2"

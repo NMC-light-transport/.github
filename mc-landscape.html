@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MC Light Transport — Field Map | NMC Project</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #080c10;
+    --bg2:       #0d1318;
+    --bg3:       #131b22;
+    --border:    rgba(100,160,220,0.12);
+    --border2:   rgba(100,160,220,0.22);
+    --text:      #c8d8e8;
+    --text2:     #7a96b0;
+    --text3:     #3d5568;
+    --accent:    #4da8ff;
+    --accent2:   #1a5fa8;
+    --gold:      #f0b429;
+    --gold2:     #7a5c0a;
+    --green:     #3dd68c;
+    --green2:    #0f4a2a;
+    --pink:      #f472b6;
+    --pink2:     #6b1f4a;
+    --purple:    #a78bfa;
+    --purple2:   #3b2b6b;
+    --teal:      #2dd4bf;
+    --teal2:     #0a3d38;
+    --amber:     #fbbf24;
+    --mono:      'Space Mono', monospace;
+    --serif:     'DM Serif Display', serif;
+    --sans:      'Inter', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  /* ── NOISE TEXTURE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* ── GRID BACKGROUND ── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(77,168,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(77,168,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── LAYOUT ── */
+  .page-wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 2rem 6rem;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 5rem 0 3rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 3.5rem;
+  }
+
+  .hero-eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.1s ease forwards;
+  }
+
+  .hero h1 {
+    font-family: var(--serif);
+    font-size: clamp(2.4rem, 5vw, 4rem);
+    font-weight: 400;
+    line-height: 1.15;
+    color: #fff;
+    letter-spacing: -0.01em;
+    margin-bottom: 1.25rem;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.2s ease forwards;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero-sub {
+    font-size: 16px;
+    color: var(--text2);
+    max-width: 600px;
+    line-height: 1.6;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.3s ease forwards;
+  }
+
+  .hero-meta {
+    margin-top: 2rem;
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.4s ease forwards;
+  }
+
+  .hero-meta a {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: 0.1em;
+    border-bottom: 1px solid var(--accent2);
+    padding-bottom: 1px;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .hero-meta a:hover { color: #fff; border-color: #fff; }
+
+  /* ── NAV ── */
+  .toc {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 3.5rem;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  .toc-title {
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 0.75rem;
+  }
+
+  .toc-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 4px 1.5rem;
+  }
+
+  .toc-list li a {
+    color: var(--text2);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .toc-list li a:before { content: '→ '; color: var(--text3); }
+  .toc-list li a:hover { color: var(--accent); }
+
+  /* ── SECTION ── */
+  section {
+    margin-bottom: 3.5rem;
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+
+  section.visible { opacity: 1; transform: none; }
+
+  .section-number {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.15em;
+    margin-bottom: 0.4rem;
+  }
+
+  section h2 {
+    font-family: var(--serif);
+    font-size: 1.75rem;
+    font-weight: 400;
+    color: #fff;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  section h3 {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 1.75rem 0 0.75rem;
+  }
+
+  p { color: var(--text); margin-bottom: 1rem; }
+  p:last-child { margin-bottom: 0; }
+
+  strong { color: #fff; font-weight: 500; }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ── PERSON CARDS ── */
+  .person-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 1.25rem 0;
+  }
+
+  .person-card {
+    background: var(--bg2);
+    padding: 1.1rem 1.25rem;
+    transition: background 0.15s;
+  }
+
+  .person-card:hover { background: var(--bg3); }
+
+  .person-card .name {
+    font-weight: 500;
+    color: #fff;
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+
+  .person-card .role {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+
+  .person-card .inst {
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.4;
+  }
+
+  .person-card .contrib {
+    font-size: 12px;
+    color: var(--text3);
+    margin-top: 6px;
+    font-style: italic;
+    line-height: 1.4;
+  }
+
+  /* ── GROUP CARDS ── */
+  .group-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.4rem 1.5rem;
+    margin: 1.25rem 0;
+    transition: border-color 0.2s;
+  }
+
+  .group-card:hover { border-color: var(--border2); }
+
+  .group-card .gc-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 1rem;
+  }
+
+  .gc-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 5px;
+  }
+
+  .gc-title { font-weight: 500; color: #fff; font-size: 15px; line-height: 1.3; }
+  .gc-inst { font-size: 12px; color: var(--text2); margin-top: 3px; }
+
+  .tag-row { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0; }
+
+  .tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 9px;
+    border-radius: 20px;
+    letter-spacing: 0.04em;
+  }
+
+  .tag-blue   { background: rgba(77,168,255,0.1);  color: var(--accent); border: 1px solid rgba(77,168,255,0.2); }
+  .tag-green  { background: rgba(61,214,140,0.08); color: var(--green);  border: 1px solid rgba(61,214,140,0.15); }
+  .tag-pink   { background: rgba(244,114,182,0.08);color: var(--pink);   border: 1px solid rgba(244,114,182,0.15); }
+  .tag-gold   { background: rgba(240,180,41,0.08); color: var(--gold);   border: 1px solid rgba(240,180,41,0.15); }
+  .tag-purple { background: rgba(167,139,250,0.08);color: var(--purple); border: 1px solid rgba(167,139,250,0.2); }
+  .tag-teal   { background: rgba(45,212,191,0.08); color: var(--teal);   border: 1px solid rgba(45,212,191,0.15); }
+
+  /* ── TABLES ── */
+  .table-wrap { overflow-x: auto; margin: 1.25rem 0; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead th {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text3);
+    text-align: left;
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid var(--border2);
+  }
+
+  tbody td {
+    padding: 0.55rem 1rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--bg2); }
+
+  td strong { color: #fff; }
+  td a { color: var(--accent); }
+
+  .check { color: var(--green); }
+  .dash  { color: var(--text3); }
+  .nmc-col { color: var(--gold) !important; font-weight: 500; }
+
+  /* ── LINEAGE TREE ── */
+  .tree {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 2;
+    overflow-x: auto;
+    color: var(--text2);
+  }
+
+  .tree .yr   { color: var(--text3); user-select: none; }
+  .tree .nm   { color: var(--accent); font-weight: 700; }
+  .tree .nmc  { color: var(--gold);   font-weight: 700; }
+  .tree .side { color: var(--green); }
+  .tree .raman{ color: var(--pink); }
+  .tree .conn { color: var(--text3); user-select: none; }
+  .tree .note { color: var(--text3); font-style: italic; }
+
+  /* ── CAPABILITY MATRIX ── */
+  .matrix-wrap { overflow-x: auto; }
+
+  .cap-table thead th { color: var(--text3); }
+  .cap-table thead th.nmc-head {
+    color: var(--gold);
+    font-size: 11px;
+  }
+
+  /* ── CODE / BLOCKQUOTE ── */
+  blockquote {
+    border-left: 2px solid var(--accent2);
+    padding: 0.75rem 1.25rem;
+    margin: 1.25rem 0;
+    background: rgba(77,168,255,0.04);
+    border-radius: 0 6px 6px 0;
+  }
+
+  blockquote p { color: var(--text2); font-size: 14px; }
+  blockquote cite { font-family: var(--mono); font-size: 11px; color: var(--text3); display: block; margin-top: 6px; }
+
+  /* ── REFS ── */
+  .refs ol {
+    list-style: none;
+    counter-reset: ref;
+  }
+
+  .refs ol li {
+    counter-increment: ref;
+    padding: 0.5rem 0 0.5rem 2.5rem;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.5;
+  }
+
+  .refs ol li:last-child { border-bottom: none; }
+
+  .refs ol li::before {
+    content: counter(ref);
+    position: absolute;
+    left: 0;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    top: 0.55rem;
+    width: 2rem;
+    text-align: right;
+  }
+
+  .refs ol li strong { color: var(--text); }
+
+  /* ── NMC HERO SECTION ── */
+  .nmc-section {
+    background: linear-gradient(135deg, rgba(240,180,41,0.05) 0%, transparent 60%),
+                var(--bg2);
+    border: 1px solid rgba(240,180,41,0.2);
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 1.25rem 0;
+  }
+
+  .nmc-section h3 {
+    color: var(--gold) !important;
+    text-transform: none !important;
+    font-family: var(--sans) !important;
+    letter-spacing: 0 !important;
+    font-size: 14px !important;
+  }
+
+  .nmc-section .nmc-label {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--gold);
+    border: 1px solid rgba(240,180,41,0.3);
+    border-radius: 20px;
+    padding: 2px 10px;
+    margin-bottom: 1rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding-top: 2rem;
+    margin-top: 4rem;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  footer a { color: var(--text3); }
+  footer a:hover { color: var(--accent); text-decoration: none; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .page-wrap { padding: 0 1.25rem 4rem; }
+    .hero { padding: 3rem 0 2rem; }
+    .hero h1 { font-size: 2rem; }
+    .person-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-eyebrow">NMC Project · Victoria University of Wellington</div>
+    <h1>Monte Carlo<br>Light Transport<br>in <em>Biological Tissue</em></h1>
+    <p class="hero-sub">A field map: the research groups, software platforms, and scientific lineage of photon transport simulation — and where the NMC nonlinear MC framework fits within this 40-year history.</p>
+    <div class="hero-meta">
+      <a href="https://github.com/aledoronin" target="_blank">↗ github.com/aledoronin</a>
+      <a href="https://doi.org/10.1117/1.JBO.27.8.083002" target="_blank">↗ Jacques 2022 (primary source)</a>
+      <a href="mc-landscape.md">↗ Markdown version</a>
+    </div>
+  </header>
+
+  <!-- TOC -->
+  <nav class="toc" aria-label="Contents">
+    <div class="toc-title">Contents</div>
+    <ul class="toc-list">
+      <li><a href="#why">Why Monte Carlo?</a></li>
+      <li><a href="#founders">Founding lineage (1985–1995)</a></li>
+      <li><a href="#gen2">Gen-2 builders (2002–2014)</a></li>
+      <li><a href="#active">Active platforms today</a></li>
+      <li><a href="#online">Online &amp; cloud simulators</a></li>
+      <li><a href="#raman">Raman &amp; nonlinear frontier</a></li>
+      <li><a href="#nmc">NMC: position &amp; contribution</a></li>
+      <li><a href="#tree">Lineage tree</a></li>
+      <li><a href="#refs">References</a></li>
+    </ul>
+  </nav>
+
+  <!-- 1. WHY MC -->
+  <section id="why">
+    <div class="section-number">01 ——</div>
+    <h2>Why Monte Carlo?</h2>
+    <p>Biological tissue is an extraordinarily complex optical medium. Photons launched into skin, brain, or other tissue undergo millions of scattering events before being absorbed, re-emitted, or escaping. Analytical solutions — such as the diffusion approximation or the Kubelka–Munk model — work only in specific regimes.</p>
+    <p><strong>Monte Carlo simulation</strong> treats photon transport as a statistical sampling problem. Each photon packet is tracked step by step: it travels a random path length, scatters at a random angle, and deposits a fraction of its weight. By simulating millions of such packets, accurate fluence distributions, reflectance, and transmittance can be obtained for <em>any</em> geometry and <em>any</em> set of optical properties.</p>
+    <p>The trade-off is computational cost — which is why the field's history is, in large part, a story of <strong>making MC fast enough to be useful</strong> (GPU acceleration, parallel computing, variance reduction), and <strong>making MC general enough</strong> to model new physics such as polarisation, fluorescence, and nonlinear Raman interactions.</p>
+  </section>
+
+  <!-- 2. FOUNDERS -->
+  <section id="founders">
+    <div class="section-number">02 ——</div>
+    <h2>The Founding Lineage: MCML (1985–1995)</h2>
+
+    <p>The canonical biomedical MC code — <strong>mcml.c</strong> — emerged from a series of contributions between 1985 and 1995, documented in the primary source: <a href="https://doi.org/10.1117/1.JBO.27.8.083002" target="_blank">Jacques (2022)</a>. The paper by Wang, Jacques, and Zheng (1995) has been cited over <strong>4,000 times</strong>.</p>
+
+    <div class="person-grid">
+      <div class="person-card">
+        <div class="name">Steven L. Jacques</div>
+        <div class="role">Father-founder · 1985</div>
+        <div class="inst">Wellman Center MGH → UT MD Anderson → OMLC/OHSU → Univ. Washington</div>
+        <div class="contrib">First tissue MC code (1985). HOP/DROP/SPIN/CHECK framework. Supervised Keijzer, Prahl, Wang, Ramella-Roman, Li Ting.</div>
+      </div>
+      <div class="person-card">
+        <div class="name">Marleen Keijzer</div>
+        <div class="role">2nd version · 1989</div>
+        <div class="inst">Delft Univ. → Jacques lab → TU Delft (now Prof., Applied Math)</div>
+        <div class="contrib">HOP/DROP/SPIN/CHECK logic (originally in Dutch). Multi-layer aorta model. First fluorescence collection in MC.</div>
+      </div>
+      <div class="person-card">
+        <div class="name">Scott A. Prahl</div>
+        <div class="role">3rd version · 1989</div>
+        <div class="inst">UT Austin (Welch lab) → OMLC → Oregon Institute of Technology (Prof. EERE)</div>
+        <div class="contrib">Cartesian coordinates. Henyey–Greenstein analytic sampling. Created omlc.org/software/mc (1996).</div>
+      </div>
+      <div class="person-card">
+        <div class="name">Lihong V. Wang</div>
+        <div class="role">4th version (definitive) · 1992</div>
+        <div class="inst">UTMDACC (Jacques lab) → Washington Univ. St Louis → Caltech (Prof., COIL)</div>
+        <div class="contrib">Definitive MCML C code. 173-page manual. First public MC website. First author of canonical 4000-citation paper.</div>
+      </div>
+    </div>
+
+    <blockquote>
+      <p>"A key aspect of this effort was the commitment to an open source code and actively sharing the code on websites."</p>
+      <cite>— S.L. Jacques, J. Biomed. Opt. 27(8), 2022</cite>
+    </blockquote>
+  </section>
+
+  <!-- 3. GEN 2 -->
+  <section id="gen2">
+    <div class="section-number">03 ——</div>
+    <h2>Generation 2: GPU Acceleration &amp; 3D Voxel Codes (2002–2020)</h2>
+
+    <p>These researchers directly extended MCML and mcxyz.c into new capabilities, forming the bridge between founders and current active groups.</p>
+
+    <h3>David A. Boas — tMCimg and the 3D Voxel Concept (2002)</h3>
+    <p><strong>David A. Boas</strong> at MGH/Harvard published <strong>tMCimg</strong>: the first publicly available 3D voxel-based MC code, capable of simulating photon migration through complex heterogeneous media including the adult human head. tMCimg is the direct ancestor of both mcxyz.c (2014) and MCX (2009).</p>
+
+    <h3>Erik Alerstam et al. — First GPU MCML (2008)</h3>
+    <p><strong>Erik Alerstam</strong>, <strong>Tomas Svensson</strong>, and <strong>Stefan Andersson-Engels</strong> at Lund University published the first CUDA GPU-accelerated version of mcml.c — the proof-of-concept for orders-of-magnitude speedup in tissue MC. This is acknowledged as the first GPU extension by Jacques (2022).</p>
+
+    <h3>Jessica Ramella-Roman — Polarised MC (2005)</h3>
+    <p><strong>Jessica Ramella-Roman</strong> (PhD, Jacques lab, OHSU) created a polarised-light MC code tracking the full Stokes vector. A GPU-accelerated version (pMCX) was later incorporated into MCX by Yan, Jacques, Ramella-Roman, and Fang (2022). She is now a professor at Florida International University.</p>
+
+    <h3>Alexander Doronin — GPU mcxyz.c (c. 2012)</h3>
+    <div class="nmc-section">
+      <span class="nmc-label">NMC direct ancestor</span>
+      <p><strong>Alexander Doronin</strong>, as a postdoc in <strong>Igor Meglinski's lab</strong> at the University of Otago, New Zealand, implemented a CUDA GPU-accelerated version of mcxyz.c and shared it publicly at <a href="https://github.com/aledoronin" target="_blank">github.com/aledoronin</a>. This work is explicitly documented in <a href="https://doi.org/10.1117/1.JBO.27.8.083002" target="_blank">Jacques (2022)</a>. Doronin is now a senior lecturer at Victoria University of Wellington — the institutional home of the NMC project.</p>
+    </div>
+
+    <h3>Li Ting + Yin-chu Chen → mcxyz.c (2014)</h3>
+    <p><strong>Li Ting</strong> (Jacques lab postdoc, inspired by Boas's tMCimg) and <strong>Yin-chu Chen</strong> (Prahl lab graduate student, 2005) wrote separate voxelated versions that were combined into the current mcxyz.c — a 3D voxel code where each voxel can have unique optical properties.</p>
+
+    <h3>Marti, Andersen &amp; Hansen — MCmatlab (2018)</h3>
+    <p><strong>Dominik Marti</strong>, <strong>Peter E. Andersen</strong>, and <strong>Anders K. Hansen</strong> at DTU Fotonik (Denmark) developed <strong>MCmatlab</strong>: a MATLAB-integrated parallel version of mcxyz.c for teaching. It adds a heat diffusion simulator and Arrhenius tissue damage model, runs parallel processors (~8× faster than mcxyz.c on a single CPU), and is explicitly cited by Jacques (2022) as a key extension.</p>
+
+    <h3>A. Phong Tran — Curved Boundaries in Voxel MC (2020)</h3>
+    <p><strong>A. Phong Tran</strong> (graduate student, Fang lab at Northeastern, in collaboration with Jacques) modified mcxyz.c to allow unique refractive indices per voxel, with smooth pre-processed boundaries for correct refraction at oblique interfaces.</p>
+  </section>
+
+  <!-- 4. ACTIVE -->
+  <section id="active">
+    <div class="section-number">04 ——</div>
+    <h2>Active Platforms Today</h2>
+
+    <div class="group-card">
+      <div class="gc-head">
+        <div class="gc-dot" style="background:var(--accent)"></div>
+        <div>
+          <div class="gc-title">MCX / MMC — COTI Lab, Northeastern University</div>
+          <div class="gc-inst">Qianqian Fang (PI) · Boston, USA · <a href="https://mcx.space" target="_blank">mcx.space</a></div>
+        </div>
+      </div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:8px">The most feature-complete open-source MC platform currently available. Fang earned his PhD at Dartmouth and joined David Boas's lab at MGH Martinos before moving to Northeastern (2013). His 2009 foundational paper demonstrated ~400× speedup over tMCimg.</p>
+      <div class="tag-row">
+        <span class="tag tag-blue">MCX (CUDA)</span>
+        <span class="tag tag-blue">MCX-CL (OpenCL)</span>
+        <span class="tag tag-blue">MMC (mesh)</span>
+        <span class="tag tag-blue">pMCX (polarised)</span>
+        <span class="tag tag-blue">MCX Cloud</span>
+        <span class="tag tag-blue">fNIRS / brain imaging</span>
+      </div>
+      <p style="font-size:12px;color:var(--text3);margin-top:8px">Team: <strong style="color:var(--text2)">Shijie Yan</strong> (pMCX), <strong style="color:var(--text2)">Yaoshen Yuan</strong> (MMC), <strong style="color:var(--text2)">Leiming Yu</strong>, <strong style="color:var(--text2)">A. Phong Tran</strong>, <strong style="color:var(--text2)">Fanny Nina-Paravecino</strong></p>
+    </div>
+
+    <div class="group-card">
+      <div class="gc-head">
+        <div class="gc-dot" style="background:var(--green)"></div>
+        <div>
+          <div class="gc-title">VTS / MCCL — Beckman Laser Institute, UC Irvine</div>
+          <div class="gc-inst">Vasan Venugopalan (PI) · Irvine, CA, USA · <a href="https://virtualphotonics.org" target="_blank">virtualphotonics.org</a></div>
+        </div>
+      </div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:8px">NIH-funded LAMMP P41 Center. Code originated in 1998 (Dunn &amp; Smithies at BLI). <strong>Carole Hayakawa</strong>'s PhD breakthrough — perturbation and differential MC for real-time sensitivity calculations — became the scientific core. David Cuccia ported to C# (MCCL, 2010).</p>
+      <div class="tag-row">
+        <span class="tag tag-green">Perturbation MC</span>
+        <span class="tag tag-green">Differential MC</span>
+        <span class="tag tag-green">C# open-source</span>
+        <span class="tag tag-green">GUI + fibre-probe ATK</span>
+        <span class="tag tag-green">NIH education program</span>
+      </div>
+      <p style="font-size:12px;color:var(--text3);margin-top:8px">Key people: <strong style="color:var(--text2)">Jerome Spanier</strong> (co-founder, mathematician; d. 2024), <strong style="color:var(--text2)">Carole K. Hayakawa</strong> (lead dev.), <strong style="color:var(--text2)">David J. Cuccia</strong> (C# port; now Modulim Inc.), <strong style="color:var(--text2)">Lisa Malenfant</strong></p>
+    </div>
+
+    <div class="group-card">
+      <div class="gc-head">
+        <div class="gc-dot" style="background:var(--teal)"></div>
+        <div>
+          <div class="gc-title">Diffuse Optics &amp; MC Reference — Univ. Florence</div>
+          <div class="gc-inst">Fabrizio Martelli (PI) · Florence, Italy</div>
+        </div>
+      </div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:8px">Unique in bridging analytical diffusion theory with MC validation. Their textbook (<em>Light Propagation through Biological Tissue</em>, SPIE Press, 2009/2022) is the field's primary reference text. Co-organised the JBO "30 Years of Open-Source MC Codes" special section (2022). Recent extension to Raman time-domain modelling in diffusive media.</p>
+      <div class="tag-row">
+        <span class="tag tag-teal">Diffusion ↔ MC validation</span>
+        <span class="tag tag-teal">MC scaling relations</span>
+        <span class="tag tag-teal">Raman diffuse optics</span>
+        <span class="tag tag-teal">Time-resolved spectroscopy</span>
+      </div>
+      <p style="font-size:12px;color:var(--text3);margin-top:8px">Collaborators: <strong style="color:var(--text2)">Angelo Sassaroli</strong> (Tufts), <strong style="color:var(--text2)">Samuele Del Bianco</strong> (CNR), <strong style="color:var(--text2)">Tiziano Binzoni</strong> (Geneva), <strong style="color:var(--text2)">André Liemert</strong> (Ulm)</p>
+    </div>
+  </section>
+
+  <!-- 5. ONLINE -->
+  <section id="online">
+    <div class="section-number">05 ——</div>
+    <h2>Online &amp; Cloud-Based Simulators</h2>
+    <p>Several groups have made MC accessible without installation — an emerging category explicitly noted in the Jacques (2022) tutorial.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Platform</th><th>Group</th><th>URL</th><th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>MCX Cloud / mcxspace</strong></td><td>Fang / Northeastern</td><td><a href="https://mcx.space/cloud" target="_blank">mcx.space/cloud</a></td><td>JSON input, GPU cluster, free</td></tr>
+          <tr><td><strong>VTS / virtualphotonics</strong></td><td>Venugopalan / UCI BLI</td><td><a href="https://virtualphotonics.org" target="_blank">virtualphotonics.org</a></td><td>C# MCCL, GUI, NIH-backed</td></tr>
+          <tr><td><strong>Multi-Scattering</strong></td><td>Jönsson &amp; Berrocal / Lund</td><td><a href="https://www.multi-scattering.com" target="_blank">multi-scattering.com</a></td><td>GPU cluster, tissue + spray, free</td></tr>
+          <tr><td><strong>OMLC archive</strong></td><td>Prahl / Oregon Tech</td><td><a href="https://omlc.org/software/mc" target="_blank">omlc.org</a></td><td>MCML source, reference datasets</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Multi-Scattering — Jönsson &amp; Berrocal, Lund University</h3>
+    <p><strong>Edouard Berrocal</strong> (PhD, Cranfield 2006; Div. Combustion Physics, Lund) and <strong>Joakim Jönsson</strong> developed a free online GPU-accelerated MC platform. It achieves up to <strong>800× acceleration</strong> over CPU using four GPU cards, capable of simulating <strong>1 billion photons in 10 seconds</strong> at optical depth 10. The Berrocal–Meglinski collaboration (2005) connects this platform's lineage to the Doronin/NMC branch through Igor Meglinski.</p>
+  </section>
+
+  <!-- 6. RAMAN -->
+  <section id="raman">
+    <div class="section-number">06 ——</div>
+    <h2>The Nonlinear Frontier: Raman &amp; Beyond</h2>
+
+    <p>Classical MC codes model <strong>linear</strong> photon transport: absorption, elastic scattering, and (sometimes) fluorescence. The emerging frontier addresses <strong>nonlinear</strong> and <strong>inelastic</strong> interactions — particularly Raman scattering, which is key for label-free chemical tissue identification.</p>
+
+    <div class="group-card">
+      <div class="gc-head">
+        <div class="gc-dot" style="background:var(--pink)"></div>
+        <div>
+          <div class="gc-title">Periyasamy &amp; Pramanik — MCML-EO + RMCC</div>
+          <div class="gc-inst">IISc Bangalore / NTU Singapore → Iowa State Univ. (Pramanik, PI)</div>
+        </div>
+      </div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:8px">First group to extend MCML to include embedded geometrical objects (sphere, cylinder, ellipsoid, cuboid) with refractive-index boundaries (MCML-EO, 2014), then add inelastic Raman scattering (RMCC, 2015). Experimentally validated against gelatin tissue phantoms with cuboid inclusions.</p>
+      <div class="tag-row">
+        <span class="tag tag-pink">MCML-EO (geometry)</span>
+        <span class="tag tag-pink">Raman MC (RMCC)</span>
+        <span class="tag tag-pink">OCT MC</span>
+      </div>
+    </div>
+
+    <div class="group-card">
+      <div class="gc-head">
+        <div class="gc-dot" style="background:var(--pink)"></div>
+        <div>
+          <div class="gc-title">Dumont, Fang &amp; Patil — isoweight Raman MC</div>
+          <div class="gc-inst">Temple University (Patil PI) + Northeastern (Fang, co-author)</div>
+        </div>
+      </div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:8px">Extended Fang's MCX with the "isoweight" approach to Raman scattering, achieving ~100× speedup via GPU parallelisation. Covers 800–2000 cm⁻¹ Raman spectral range. Fang is co-author, making this a direct code-level link between the MCX ecosystem and Raman MC.</p>
+      <div class="tag-row">
+        <span class="tag tag-pink">isoweight algorithm</span>
+        <span class="tag tag-pink">MCX-based GPU</span>
+        <span class="tag tag-pink">Raman + fluorescence</span>
+      </div>
+    </div>
+
+    <div class="group-card">
+      <div class="gc-head">
+        <div class="gc-dot" style="background:var(--pink)"></div>
+        <div>
+          <div class="gc-title">Akbarzadeh &amp; Leblond — Spectroscopic Raman MC</div>
+          <div class="gc-inst">Polytechnique Montréal (Leblond PI) + CRCHUM</div>
+        </div>
+      </div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:8px">Full spectroscopic MC package combining absorption, fluorescence, elastic scattering, and inelastic Raman in a single framework. Validated against tissue phantoms for depth-resolved Raman sensing. Leblond's group leads in intraoperative Raman guidance for brain and lung cancer surgery.</p>
+      <div class="tag-row">
+        <span class="tag tag-pink">Full spectroscopic MC</span>
+        <span class="tag tag-pink">Depth-resolved Raman</span>
+        <span class="tag tag-pink">Surgical guidance</span>
+      </div>
+    </div>
+
+    <div class="group-card">
+      <div class="gc-head">
+        <div class="gc-dot" style="background:var(--purple)"></div>
+        <div>
+          <div class="gc-title">Hokr, Yakovlev &amp; Scully — Stimulated Raman MC</div>
+          <div class="gc-inst">Texas A&amp;M University (Scully group)</div>
+        </div>
+      </div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:8px">Published the first time-dependent MC model for <strong>stimulated Raman scattering (SRS)</strong> in turbid tissue (ACS Photonics, 2014). SRS is a coherent, intensity-dependent nonlinear process — the first genuinely nonlinear interaction incorporated into a tissue MC framework. Yakovlev is now an active collaborator on the NMC project.</p>
+      <div class="tag-row">
+        <span class="tag tag-purple">SRS MC (first, 2014)</span>
+        <span class="tag tag-purple">Time-dependent MC</span>
+        <span class="tag tag-purple">Nonlinear population transfer</span>
+        <span class="tag tag-purple">NMC collaborator (2023–)</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. NMC -->
+  <section id="nmc">
+    <div class="section-number">07 ——</div>
+    <h2>NMC: Position &amp; Contribution</h2>
+
+    <div class="nmc-section">
+      <span class="nmc-label">NMC Project</span>
+      <h3>What makes NMC distinct</h3>
+      <p style="color:var(--text);margin-bottom:0.75rem">The NMC project, led by <strong>Alexander Doronin</strong> at Victoria University of Wellington, occupies a <strong>specific and novel position</strong> at the nonlinear frontier of biomedical MC simulation:</p>
+      <ol style="font-size:13px;color:var(--text2);padding-left:1.25rem;line-height:1.8">
+        <li><strong style="color:#fff">Unified nonlinear MC framework.</strong> NMC handles both spontaneous and stimulated Raman scattering in a single photon transport engine — not as an add-on to a linear code.</li>
+        <li><strong style="color:#fff">Power-efficient computation.</strong> The Neu(t)ralMC iteration (Clennell et al. 2023) targets Apple M-series (ARM) processors, enabling high-throughput simulation on low-power hardware without a dedicated NVIDIA GPU.</li>
+        <li><strong style="color:#fff">Verified lineage.</strong> Doronin's GPU mcxyz.c (Otago, ~2012) is acknowledged by Jacques (2022) as a key extension of the foundational code. NMC is the natural evolution.</li>
+        <li><strong style="color:#fff">Collaborative nonlinear physics.</strong> The Yakovlev collaboration (Texas A&amp;M) — co-author of the first SRS MC paper (2014) — brings the deepest expertise in nonlinear Raman physics into the framework.</li>
+        <li><strong style="color:#fff">Object-oriented architecture.</strong> Earlier work (Doronin &amp; Meglinski 2011, 2012) introduced OO and distributed/P2P MC architectures underpinning NMC's modularity.</li>
+      </ol>
+    </div>
+
+    <h3>Capability Matrix</h3>
+    <div class="table-wrap matrix-wrap">
+      <table class="cap-table">
+        <thead>
+          <tr>
+            <th>Capability</th>
+            <th>MCML</th>
+            <th>MCX</th>
+            <th>MCmatlab</th>
+            <th class="nmc-head">NMC</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Multi-layer tissue</td>
+            <td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="nmc-col check">✓</td>
+          </tr>
+          <tr>
+            <td>3D voxel geometry</td>
+            <td class="dash">—</td><td class="check">✓</td><td class="check">✓</td><td class="nmc-col check">✓</td>
+          </tr>
+          <tr>
+            <td>GPU acceleration</td>
+            <td class="dash">—</td><td class="check">✓</td><td>partial</td><td class="nmc-col check">✓</td>
+          </tr>
+          <tr>
+            <td>Polarisation / Stokes</td>
+            <td style="color:var(--text3)">ext.</td><td class="check">✓ pMCX</td><td class="dash">—</td><td class="nmc-col check">✓</td>
+          </tr>
+          <tr>
+            <td>Fluorescence</td>
+            <td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="nmc-col" style="color:var(--text3)">planned</td>
+          </tr>
+          <tr>
+            <td><strong>Spontaneous Raman MC</strong></td>
+            <td class="dash">—</td><td style="color:var(--text3)">ext.</td><td class="dash">—</td><td class="nmc-col check">✓ core</td>
+          </tr>
+          <tr>
+            <td><strong>Stimulated Raman (SRS)</strong></td>
+            <td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="nmc-col check">✓ core</td>
+          </tr>
+          <tr>
+            <td>Apple M-series ARM opt.</td>
+            <td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="nmc-col check">✓</td>
+          </tr>
+          <tr>
+            <td>Energy-efficient design</td>
+            <td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="nmc-col check">✓</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 8. TREE -->
+  <section id="tree">
+    <div class="section-number">08 ——</div>
+    <h2>Lineage Tree</h2>
+    <div class="tree">
+<span class="yr">1985 </span><span class="nm">Steven Jacques</span> <span class="note">(Wellman/MGH)</span> — first MC code for tissue
+  │
+<span class="yr">1989 </span><span class="nm">Marleen Keijzer</span> <span class="note">(Delft → Jacques lab)</span> — HOP/DROP/SPIN/CHECK
+  │
+<span class="yr">1989 </span><span class="nm">Scott Prahl</span> <span class="note">(UT Austin, Welch lab)</span> — Cartesian + HG scattering
+  │
+<span class="yr">1992 </span><span class="nm">Lihong V. Wang</span> <span class="note">(UTMDACC, Jacques lab)</span> — definitive MCML + first website
+  │
+<span class="yr">1995 </span>Wang, Jacques, Zheng — <span class="nm">MCML paper</span> <span class="note">(4000+ citations)</span>
+  │
+  ├─<span class="yr">2002 </span><span class="nm">David A. Boas</span> <span class="note">(MGH)</span> — tMCimg (3D voxel, heterogeneous)
+  │    └─<span class="yr">2009 </span><span class="nm">Qianqian Fang</span> + Boas — <span class="nm">MCX</span> (GPU, CUDA; ~400× speedup)
+  │         └─<span class="yr">2021 </span><span class="raman">Dumont / Patil / Fang</span> — isoweight Raman MC (ext. MCX)
+  │
+  ├─<span class="yr">2005 </span><span class="side">Jessica Ramella-Roman</span> <span class="note">(OHSU, Jacques lab)</span> — polarised MC
+  │    └─<span class="yr">2022 </span><span class="side">Yan / Fang / Ramella-Roman / Jacques</span> — pMCX (GPU polarised)
+  │
+  ├─<span class="yr">2008 </span><span class="side">Erik Alerstam</span> <span class="note">(Lund, Andersson-Engels)</span> — GPU-MCML (first CUDA)
+  │    └── <span class="side">Jönsson / Berrocal</span> <span class="note">(Lund)</span> — Multi-Scattering online platform (2020)
+  │
+  ├─<span class="yr">2014 </span>Li Ting + Chen <span class="note">(Jacques / Prahl labs)</span> — <span class="nm">mcxyz.c</span> (3D voxel)
+  │    │
+  │    ├─<span class="yr">~2012 </span><span class="nmc">Alex Doronin</span> <span class="note">(Otago, Meglinski lab)</span> — GPU mcxyz.c (CUDA) ← <em>cited Jacques 2022</em>
+  │    │    └─<span class="yr">2019– </span><span class="nmc">NMC @ Victoria Univ. Wellington</span>
+  │    │         ├─ Spontaneous Raman MC engine
+  │    │         ├─ SRS (stimulated Raman) MC engine ←─<span class="raman"> Hokr/Yakovlev 2014</span>
+  │    │         └─ Neu(t)ralMC / Apple M-series port (2023)
+  │    │
+  │    └─<span class="yr">2018 </span><span class="side">Marti / Andersen / Hansen</span> <span class="note">(DTU)</span> — MCmatlab (MATLAB, teaching)
+  │
+  └─<span class="yr">2014 </span><span class="raman">Hokr / Yakovlev / Scully</span> <span class="note">(Texas A&amp;M)</span> — first SRS MC in turbid tissue
+         └── <span class="note">(collaborates with NMC, 2023–)</span>
+
+<span class="note">[Independent lines]</span>
+  <span class="side">VTS / MCCL</span> <span class="note">(UCI BLI, 1998–)</span> — Venugopalan / Spanier / Hayakawa
+  <span class="side">Martelli group</span> <span class="note">(Florence, 1997–)</span> — diffuse optics theory + MC reference
+    </div>
+  </section>
+
+  <!-- 9. REFS -->
+  <section id="refs" class="refs">
+    <div class="section-number">09 ——</div>
+    <h2>Key References</h2>
+    <ol>
+      <li><strong>Jacques S.L.</strong> (2022). History of Monte Carlo modeling of light transport in tissues using mcml.c. <em>J. Biomed. Opt.</em> <strong>27</strong>(8), 083002. <a href="https://doi.org/10.1117/1.JBO.27.8.083002" target="_blank">doi:10.1117/1.JBO.27.8.083002</a></li>
+      <li><strong>Wang L.V., Jacques S.L., Zheng L.</strong> (1995). MCML — Monte Carlo modeling of photon transport in multi-layered tissues. <em>Comput. Methods Prog. Biomed.</em> <strong>47</strong>, 131–146.</li>
+      <li><strong>Fang Q., Boas D.A.</strong> (2009). Monte Carlo simulation of photon migration in 3D turbid media accelerated by graphics processing units. <em>Opt. Express</em> <strong>17</strong>(22), 20178–20190.</li>
+      <li><strong>Alerstam E., Svensson T., Andersson-Engels S.</strong> (2008). Parallel computing with graphics processing units for high-speed Monte Carlo simulation of photon migration. <em>J. Biomed. Opt.</em> <strong>13</strong>(6), 060504.</li>
+      <li><strong>Marti D., Aasbjerg R.N., Andersen P.E., Hansen A.K.</strong> (2018). MCmatlab: open-source, MATLAB-integrated 3D MC solver with heat diffusion and tissue damage. <em>J. Biomed. Opt.</em> <strong>23</strong>(12), 121622.</li>
+      <li><strong>Hayakawa C.K. et al.</strong> (2022). MCCL: open-source software for Monte Carlo radiative transport. <em>J. Biomed. Opt.</em> <strong>27</strong>(8), 083005.</li>
+      <li><strong>Hokr B.H., Yakovlev V.V., Scully M.O.</strong> (2014). Efficient time-dependent Monte Carlo simulations of stimulated Raman scattering in a turbid medium. <em>ACS Photonics</em> <strong>1</strong>(12).</li>
+      <li><strong>Periyasamy V., Pramanik M.</strong> (2015). Experimental validation of Raman Monte Carlo simulations for a cuboid object. <em>J. Raman Spectrosc.</em> <strong>46</strong>(7).</li>
+      <li><strong>Jönsson J., Berrocal E.</strong> (2020). Multi-Scattering software. Part I: online accelerated Monte Carlo. <em>Opt. Express</em> <strong>28</strong>(25).</li>
+      <li><strong>Doronin A., Meglinski I.</strong> (2011). Online object-oriented MC computational tool for biomedical optics. <em>Biomed. Opt. Express</em> <strong>2</strong>.</li>
+      <li><strong>Doronin A., Meglinski I.</strong> (2012). Peer-to-peer Monte Carlo simulation of photon migration. <em>J. Biomed. Opt.</em> <strong>17</strong>(9).</li>
+      <li><strong>Clennell B., Nguyen T., Yakovlev V.V., Doronin A.</strong> (2023). Neu(t)ralMC: energy-efficient open-source MC algorithm for photon transport. <em>Opt. Express</em> <strong>31</strong>(19).</li>
+      <li><strong>Vladyko I., Yakovlev V.V., Doronin A.</strong> (2025). Monte Carlo modelling of Raman signal enhancement using Apple M-series processors. <em>SPIE BiOS 2025.</em></li>
+      <li><strong>Boas D.A. et al.</strong> (2002). Three dimensional Monte Carlo code for photon migration through complex heterogeneous media including the adult human head. <em>Opt. Express</em> <strong>10</strong>(3), 159–170.</li>
+    </ol>
+  </section>
+
+</div><!-- /page-wrap -->
+
+<footer>
+  <div>NMC Project · Victoria University of Wellington · School of Engineering and Computer Science</div>
+  <div>
+    <a href="https://github.com/aledoronin" target="_blank">GitHub</a> ·
+    <a href="mc-landscape.md">Markdown version</a> ·
+    <a href="https://doi.org/10.1117/1.JBO.27.8.083002" target="_blank">Jacques 2022</a>
+  </div>
+</footer>
+
+<script>
+// Intersection Observer for section reveal
+const sections = document.querySelectorAll('section');
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      obs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.07 });
+
+sections.forEach(s => obs.observe(s));
+</script>
+
+</body>
+</html>
