@@ -34,7 +34,8 @@ keywords:
 
 references:
   - type: article
-    title: "Monte Carlo modelling of Raman signal enhancement using Apple M-series processors"
+    title: "A Power-Efficient Monte Carlo Framework for Nonlinear Light-Matter Interactions: In Silico Modeling of Spontaneous and Stimulated Raman
+      Scattering"
     authors:
       - family-names: Vladyko
         given-names: Ilya
@@ -43,8 +44,7 @@ references:
       - family-names: Doronin
         given-names: Alexander
     year: 2025
-    conference:
-      name: "SPIE BiOS 2025"
+    doi: 10.22541/au.175766965.59561322/v1
   - type: article
     title: "Neu(t)ralMC: open-source energy-efficient Monte Carlo algorithm for photon transport"
     authors:
@@ -60,6 +60,7 @@ references:
     journal: "Optics Express"
     volume: "31"
     issue: "19"
+    doi: 10.1364/oe.496516
   - type: article
     title: "Peer-to-peer Monte Carlo simulation of photon migration"
     authors:
@@ -71,6 +72,7 @@ references:
     journal: "Journal of Biomedical Optics"
     volume: "17"
     issue: "9"
+    doi: 10.1117/1.jbo.17.9.090504
   - type: article
     title: "Online object-oriented Monte Carlo computational tool for biomedical optics"
     authors:
@@ -81,3 +83,4 @@ references:
     year: 2011
     journal: "Biomedical Optics Express"
     volume: "2"
+    doi: 10.1364/BOE.2.002461
