@@ -15,7 +15,7 @@ While classical MC codes (MCML, MCX, mcxyz.c) model linear photon transport — 
 - 🧠 **Time-resolved transport** with full spectral tracking
 - 🍎 **Apple M-series (ARM) optimisation** for energy-efficient high-throughput simulation
 
-NMC is developed and maintained by the **[Computational Biophotonics group](https://www.lighttransport.net)** led by [Alexander Doronin](https://github.com/aledoronin) at Victoria University of Wellington, New Zealand.
+NMC is led by [Alexander Doronin](https://github.com/aledoronin) at Victoria University of Wellington, New Zealand.
 
 ---
 
@@ -62,20 +62,6 @@ MCML (Wang, Jacques, Prahl 1992)
                             ├── Polarised light transport engine
                             └── Raman scattering engine
 ```
-
----
-
-## Related Open-Source MC Platforms
-
-| Platform | Group | Specialty |
-|---|---|---|
-| [MCML](https://omlc.org/software/mc) | Jacques, Prahl, Wang | Foundational multi-layer MC |
-| [MCX](https://mcx.space) | Fang (Northeastern) | GPU-accelerated voxel MC |
-| [MMC](https://mcx.space/wiki/index.cgi?MMC) | Fang (Northeastern) | Mesh-based MC |
-| [MCmatlab](https://github.com/ankrh/MCmatlab) | Andersen/Hansen (DTU) | MATLAB, teaching, heat diffusion |
-| [VTS / MCCL](https://github.com/VirtualPhotonics/VTS) | Venugopalan (UCI BLI) | Perturbation MC, C# |
-| [Multi-Scattering](https://multi-scattering.com) | Berrocal/Jönsson (Lund) | Online GPU, sprays + tissue |
-
 ---
 
 ## Licence
