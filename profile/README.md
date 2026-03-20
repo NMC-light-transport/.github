@@ -26,7 +26,6 @@ NMC is led by [Alexander Doronin](https://github.com/aledoronin) at Victoria Uni
 | **Alexander Doronin** | PI, lead developer | Victoria University of Wellington |
 | **Ilya Vladyko** | PhD student, Raman MC engine | Victoria University of Wellington |
 | **Vladislav V. Yakovlev** | Collaborator, nonlinear optics | Texas A&M University |
-| **Igor Meglinski** | Former PI (Otago postdoc period) | Aston University / Univ. Oulu |
 
 ---
 
@@ -47,21 +46,6 @@ The field of biomedical Monte Carlo simulation has a rich 40-year lineage. NMC o
 
 🌐 **[`docs/mc-landscape.html`](../docs/mc-landscape.html)** — Interactive visual version of the same landscape (open in any browser).
 
----
-
-## Relation to Classic MC Codes
-
-NMC inherits from the **mcxyz.c** lineage (Jacques / Wang / Prahl, MCML 1992 → mcxyz.c 2014). Doronin implemented a CUDA GPU-accelerated version of mcxyz.c as a postdoc in Igor Meglinski's lab at the University of Otago — an effort explicitly acknowledged in [Jacques (2022), J. Biomed. Opt. 27(8)](https://doi.org/10.1117/1.JBO.27.8.083002). NMC is the next evolution of that work, adding nonlinear physics that classical codes cannot model.
-
-```
-MCML (Wang, Jacques, Prahl 1992)
-    └── mcxyz.c (Li Ting + Jacques, 2014)
-            └── GPU mcxyz.c (Doronin @ Otago/Meglinski, ~2012)
-                    └── NMC — Nonlinear MC (Doronin @ VUW, 2019–)
-                            ├── Neu(t)ralMC / Apple M-series port (2023) 
-                            ├── Polarised light transport engine
-                            └── Raman scattering engine
-```
 ---
 
 ## Licence
