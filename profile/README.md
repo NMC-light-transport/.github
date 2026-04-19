@@ -31,7 +31,7 @@ NMC is led by [Alexander Doronin](https://github.com/aledoronin) at Victoria Uni
 
 ## Key Publications
 
-- **Vladyko, Yakovlev, Doronin** (2025) — *"[A Power-Efficient Monte Carlo Framework for Nonlinear Light-Matter Interactions: In Silico Modeling of Spontaneous and Stimulated Raman Scattering](https://www.authorea.com/users/966458/articles/1334839-a-power-efficient-monte-carlo-framework-for-nonlinear-light-matter-interactions-in-silico-modeling-of-spontaneous-and-stimulated-raman-scattering)"*
+- **Vladyko, Yakovlev, Doronin** (2025) — *"[A Power-Efficient Monte Carlo Framework for Nonlinear Light-Matter Interactions: In Silico Modeling of Spontaneous and Stimulated Raman Scattering](http://dx.doi.org/10.1002/jrs.70135)"*
 - **Clennell, Nguyen, Yakovlev, Doronin** (2023) — *"[Neu(t)ralMC: energy-efficient open-source MC algorithm for photon transport](https://doi.org/10.1364/oe.496516)"*, Opt. Express 31(19)
 - **Doronin & Meglinski** (2012) — *"[Peer-to-peer Monte Carlo simulation of photon migration](https://doi.org/10.1117/1.jbo.17.9.090504)"*, J. Biomed. Opt. 17(9)
 - **Doronin & Meglinski** (2011) — *"[Online object-oriented Monte Carlo computational tool for biomedical optics](https://doi.org/10.1364/BOE.2.002461)"*, Biomed. Opt. Express 2
